@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Yasmin 💖</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poetsen+One&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet"> 
+   
+    </style>
+    <script>
+      // ========== CONFIGURAÇÕES GERAIS ==========
+      let waterTotal = 0; 
+      const dailyGoal = 3000; // meta diária de água em ml
+      let currentDate = new Date().toLocaleDateString('pt-BR');
+
+      // ========== SISTEMA DE HIDRATAÇÃO ==========
+      function addWater() {
+        if (waterTotal < dailyGoal) {
+          waterTotal += 250;
+          updateWaterDisplay();
+          showMessage();
+          saveToLocalStorage();
+        }
+      }
+
+      function updateWaterDisplay() {
+        document.getElementById("waterAmount").innerText = `${waterTotal}ml / ${dailyGoal}ml`;
+        const progress = (waterTotal / dailyGoal) * 100;
+        document.getElementById("progressBar").style.width = `${progress}%`;
+        document.getElementById("waterPercentage").innerText = `${Math.round(progress)}%`;
+      }
+
+      function showMessage() {
+        const frases = [
+          "Orgulho de você 💖",
+          "Continue se cuidando, meu amor 😘",
+          "Cada gole é um passo pro seu bem-estar 💧",
+          "Linda e hidratada como sempre 🌸",
+          "Você é minha prioridade 🥰",
+          "Te amo mais que água gelada no calor 😜"
+        ];
+        const msg = frases[Math.floor(Math.random() * frases.length)];
+        document.getElementById("message").innerText = msg;
+      }
+
+      function resetWater() {
+        if (confirm("Zerar seu progresso de água hoje?")) {
+          waterTotal = 0;
+          updateWaterDisplay();
+          document.getElementById("message").innerText = "";
+          saveToLocalStorage();
+        }
+      }
+
+      // ========== SISTEMA DE NUTRIÇÃO ==========
+      const foodDatabase = {
+        "frango": { calories: 165, protein: 31, carbs: 0, fat: 3.6, category: "proteína" },
+        "peito de frango": { calories: 165, protein: 31, carbs: 0, fat: 3.6, category: "proteína" },
+        "carne": { calories: 250, protein: 26, carbs: 0, fat: 15, category: "proteína" },
+        "peixe": { calories: 206, protein: 22, carbs: 0, fat: 12, category: "proteína" },
+        "ovo": { calories: 155, protein: 13, carbs: 1.1, fat: 11, category: "proteína" },
+        "arroz": { calories: 130, protein: 2.7, carbs: 28, fat: 0.3, category: "carboidrato" },
+        "arroz integral": { calories: 111, protein: 2.6, carbs: 23, fat: 0.9, category: "carboidrato" },
+        "batata": { calories: 77, protein: 2, carbs: 17, fat: 0.1, category: "carboidrato" },
+        "batata doce": { calories: 86, protein: 1.6, carbs: 20, fat: 0.1, category: "carboidrato" },
+        "macarrão": { calories: 131, protein: 5, carbs: 25, fat: 1, category: "carboidrato" },
+        "aveia": { calories: 389, protein: 16.9, carbs: 66, fat: 6.9, category: "carboidrato" },
+        "pão": { calories: 265, protein: 9, carbs: 49, fat: 3.2, category: "carboidrato" },
+        "pão integral": { calories: 247, protein: 13, carbs: 41, fat: 3.4, category: "carboidrato" },
+        "banana": { calories: 89, protein: 1.1, carbs: 22.8, fat: 0.3, category: "fruta" },
+        "maçã": { calories: 52, protein: 0.3, carbs: 14, fat: 0.2, category: "fruta" },
+        "iogurte": { calories: 59, protein: 10, carbs: 3.6, fat: 0.4, category: "laticínio" },
+        "iogurte natural": { calories: 59, protein: 10, carbs: 3.6, fat: 0.4, category: "laticínio" },
+        "queijo": { calories: 402, protein: 25, carbs: 1.3, fat: 33, category: "laticínio" },
+        "leite": { calories: 42, protein: 3.4, carbs: 4.8, fat: 1, category: "laticínio" },
+        "abacate": { calories: 160, protein: 2, carbs: 8.5, fat: 14.7, category: "fruta" },
+        "brócolis": { calories: 34, protein: 2.8, carbs: 6.6, fat: 0.4, category: "vegetal" },
+        "cenoura": { calories: 41, protein: 0.9, carbs: 9.6, fat: 0.2, category: "vegetal" },
+        "chocolate": { calories: 546, protein: 4.9, carbs: 61, fat: 31, category: "doce" },
+        "açúcar": { calories: 387, protein: 0, carbs: 100, fat: 0, category: "doce" },
+        "mel": { calories: 304, protein: 0.3, carbs: 82, fat: 0, category: "doce" },
+        "castanha": { calories: 607, protein: 20, carbs: 21, fat: 54, category: "oleaginosas" },
+        "amendoim": { calories: 567, protein: 26, carbs: 16, fat: 49, category: "oleaginosas" },
+        "azeite": { calories: 884, protein: 0, carbs: 0, fat: 100, category: "gordura" }
+      };
+
+      function addFood() {
+        const foodName = document.getElementById("foodInput").value.trim();
+        const quantity = parseFloat(document.getElementById("quantityInput").value) || 0;
+        const mealTime = document.getElementById("mealTime").value;
+        
+        if (!foodName || quantity <= 0) {
+          alert("Por favor, preencha o nome do alimento e a quantidade!");
+          return;
+        }
+
+        let foodInfo = null;
+        for (const key in foodDatabase) {
+          if (foodName.toLowerCase().includes(key)) {
+            foodInfo = { ...foodDatabase[key], name: key };
+            break;
+          }
+        }
+
+        if (!foodInfo) {
+          foodInfo = {
+            name: foodName,
+            calories: 150,
+            protein: 5,
+            carbs: 15,
+            fat: 5,
+            category: "outros"
+          };
+        }
+
+        const ratio = quantity / 100;
+        const foodEntry = {
+          name: foodName,
+          quantity: quantity,
+          time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+          mealTime: mealTime,
+          calories: Math.round(foodInfo.calories * ratio),
+          protein: Math.round(foodInfo.protein * ratio * 10) / 10,
+          carbs: Math.round(foodInfo.carbs * ratio * 10) / 10,
+          fat: Math.round(foodInfo.fat * ratio * 10) / 10,
+          category: foodInfo.category,
+          date: currentDate
+        };
+
+        addFoodToDiary(foodEntry);
+        updateNutritionTotals();
+        document.getElementById("foodInput").value = "";
+        document.getElementById("quantityInput").value = "";
+        saveToLocalStorage();
+      }
+
+      function addFoodToDiary(food) {
+        const diary = document.getElementById("foodDiary");
+        
+        const foodItem = document.createElement("div");
+        foodItem.className = "food-item bg-white p-3 mb-2 rounded-lg shadow";
+        foodItem.innerHTML = `
+          <div class="flex justify-between items-start">
+            <div>
+              <span class="font-bold text-pink-700">${food.name}</span>
+              <span class="text-sm text-pink-500 ml-2">${food.quantity}g • ${food.time} • ${food.mealTime}</span>
+            </div>
+            <button onclick="removeFood(this)" class="text-pink-400 hover:text-pink-600">✕</button>
+          </div>
+          <div class="mt-1 flex flex-wrap gap-1">
+            <span class="nutrition-badge bg-red-100 text-red-800">${food.calories} kcal</span>
+            <span class="nutrition-badge bg-blue-100 text-blue-800">P: ${food.protein}g</span>
+            <span class="nutrition-badge bg-green-100 text-green-800">C: ${food.carbs}g</span>
+            <span class="nutrition-badge bg-yellow-100 text-yellow-800">G: ${food.fat}g</span>
+            <span class="nutrition-badge bg-purple-100 text-purple-800">${food.category}</span>
+          </div>
+        `;
+        
+        if (diary.firstChild) {
+          diary.insertBefore(foodItem, diary.firstChild);
+        } else {
+          diary.appendChild(foodItem);
+        }
+      }
+
+      function removeFood(button) {
+        button.closest('.food-item').remove();
+        updateNutritionTotals();
+        saveToLocalStorage();
+      }
+
+      function updateNutritionTotals() {
+        const foodItems = document.querySelectorAll('.food-item');
+        let totals = { calories: 0, protein: 0, carbs: 0, fat: 0 };
+
+        foodItems.forEach(item => {
+          if (item.querySelector('span.text-pink-500').textContent.includes(currentDate)) {
+            const calories = parseInt(item.querySelector('.nutrition-badge').textContent.split(' ')[0]);
+            const protein = parseFloat(item.querySelectorAll('.nutrition-badge')[1].textContent.split(' ')[1].replace('g', ''));
+            const carbs = parseFloat(item.querySelectorAll('.nutrition-badge')[2].textContent.split(' ')[1].replace('g', ''));
+            const fat = parseFloat(item.querySelectorAll('.nutrition-badge')[3].textContent.split(' ')[1].replace('g', ''));
+            
+            totals.calories += calories;
+            totals.protein += protein;
+            totals.carbs += carbs;
+            totals.fat += fat;
+          }
+        });
+
+        document.getElementById("totalCalories").textContent = totals.calories;
+        document.getElementById("totalProtein").textContent = totals.protein.toFixed(1);
+        document.getElementById("totalCarbs").textContent = totals.carbs.toFixed(1);
+        document.getElementById("totalFat").textContent = totals.fat.toFixed(1);
+        updateMacrosChart(totals);
+      }
+
+      function updateMacrosChart(totals) {
+        const totalMacros = totals.protein + totals.carbs + totals.fat;
+        if (totals.calories > 0) {
+          const proteinPercent = Math.round((totals.protein * 4 / totals.calories) * 100);
+          const carbsPercent = Math.round((totals.carbs * 4 / totals.calories) * 100);
+          const fatPercent = Math.round((totals.fat * 9 / totals.calories) * 100);
+          
+          document.getElementById("proteinBar").style.width = `${proteinPercent}%`;
+          document.getElementById("carbsBar").style.width = `${carbsPercent}%`;
+          document.getElementById("fatBar").style.width = `${fatPercent}%`;
+          
+          document.getElementById("proteinPercent").textContent = `${proteinPercent}%`;
+          document.getElementById("carbsPercent").textContent = `${carbsPercent}%`;
+          document.getElementById("fatPercent").textContent = `${fatPercent}%`;
+        }
+      }
+
+      function clearDiary() {
+        if (confirm("Tem certeza que quer limpar todo o diário alimentar de hoje?")) {
+          const items = document.querySelectorAll('.food-item');
+          items.forEach(item => {
+            if (item.querySelector('span.text-pink-500').textContent.includes(currentDate)) {
+              item.remove();
+            }
+          });
+          updateNutritionTotals();
+          saveToLocalStorage();
+        }
+      }
+
+      // ========== SISTEMA DE TREINOS IA ==========
+      const exerciseDatabase = {
+        "perna": [
+          { name: "Agachamento Livre", sets: "4x12", desc: "Pés na largura dos ombros, descer como se fosse sentar", emoji: "🦵", difficulty: "Média" },
+          { name: "Afundo", sets: "3x10 cada", desc: "Passo largo, joelho quase tocando o chão", emoji: "🚶‍♀️", difficulty: "Média" },
+          { name: "Elevação Pélvica", sets: "3x15", desc: "Deitada, joelhos flexionados, elevar quadril", emoji: "🍑", difficulty: "Fácil" }
+        ],
+        "braço": [
+          { name: "Rosca Direta", sets: "3x12", desc: "Cotovelos fixos, levantar peso com controle", emoji: "💪", difficulty: "Fácil" },
+          { name: "Tríceps Banco", sets: "3x10", desc: "Apoiar mãos no banco, descer corpo", emoji: "🪑", difficulty: "Média" }
+        ],
+        "abdômen": [
+          { name: "Prancha", sets: "3x30s", desc: "Cotovelos no chão, corpo reto", emoji: "🛑", difficulty: "Média" },
+          { name: "Abdominal Supra", sets: "3x15-20", desc: "Mãos atrás da cabeça, levantar ombros", emoji: "⬆️", difficulty: "Fácil" }
+        ],
+        "cardio": [
+          { name: "Pular Corda", sets: "5min", desc: "Ritmo moderado, pés juntos", emoji: "🔄", difficulty: "Média" },
+          { name: "Polichinelo", sets: "3x1min", desc: "Bom para aquecimento", emoji: "🌟", difficulty: "Fácil" }
+        ],
+        "alongamento": [
+          { name: "Alongamento Posterior", sets: "3x30s", desc: "Sentada, tocar os pés", emoji: "🧘‍♀️", difficulty: "Fácil" }
+        ]
+      };
+
+      const workoutCoach = {
+        preferences: {
+          favoriteExercises: ["Agachamento Livre", "Prancha"],
+          dislikedExercises: [],
+          focusAreas: ["perna", "abdômen"],
+          availableTime: 45,
+          fitnessLevel: "Intermediário"
+        },
+
+        generateWorkout: function(goal, intensity = "moderado") {
+          let workout = [];
+          const focusArea = this.preferences.focusAreas[Math.floor(Math.random() * this.preferences.focusAreas.length)];
+          
+          workout = workout.concat(this.selectExercises(focusArea, 2, intensity));
+          
+          const complementaryAreas = ["braço", "abdômen", "cardio"].filter(a => a !== focusArea);
+          const complementaryArea = complementaryAreas[Math.floor(Math.random() * complementaryAreas.length)];
+          workout = workout.concat(this.selectExercises(complementaryArea, 1, intensity));
+          
+          workout = workout.concat(this.selectExercises("alongamento", 1, "leve"));
+          workout = workout.filter(ex => !this.preferences.dislikedExercises.includes(ex.name));
+          
+          if (workout.length < 4 && this.preferences.favoriteExercises.length > 0) {
+            const favoriteToAdd = this.preferences.favoriteExercises[0];
+            if (!workout.some(ex => ex.name === favoriteToAdd)) {
+              const favExercise = this.findExerciseByName(favoriteToAdd);
+              if (favExercise) workout.unshift(favExercise);
+            }
+          }
+          
+          return workout;
+        },
+        
+        selectExercises: function(area, count, intensity) {
+          let available = [...exerciseDatabase[area]];
+          if (intensity === "leve") {
+            available = available.filter(ex => ex.difficulty !== "Difícil");
+          } else if (intensity === "intenso") {
+            available = available.filter(ex => ex.difficulty !== "Fácil");
+          }
+          return available.sort(() => 0.5 - Math.random()).slice(0, count);
+        },
+        
+        findExerciseByName: function(name) {
+          for (const area in exerciseDatabase) {
+            const found = exerciseDatabase[area].find(ex => ex.name === name);
+            if (found) return found;
+          }
+          return null;
+        },
+        
+        generateMotivationalMessage: function() {
+          const messages = [
+            `Vamos lá, ${this.preferences.focusAreas[0]} forte hoje! 💪`,
+            `Treino personalizado pronto! Incluí ${this.preferences.favoriteExercises[0]} pra você começar com tudo 🌟`,
+            `Foco em ${this.preferences.focusAreas.join(" e ")} hoje! ✨`
+          ];
+          return messages[Math.floor(Math.random() * messages.length)];
+        }
+      };
+
+      function showExerciseCategories() {
+        const container = document.getElementById("exerciseCategories");
+        container.innerHTML = '';
+        
+        for (const category in exerciseDatabase) {
+          const btn = document.createElement("button");
+          btn.className = "bg-pink-200 text-pink-800 px-4 py-2 rounded-full hover:bg-pink-300 transition";
+          btn.textContent = `${getEmojiForCategory(category)} ${capitalizeFirstLetter(category)}`;
+          btn.onclick = () => showExercises(category);
+          container.appendChild(btn);
+        }
+      }
+
+      function showExercises(category) {
+        document.getElementById("exerciseList").innerHTML = '';
+        
+        exerciseDatabase[category].forEach(ex => {
+          const card = document.createElement("div");
+          card.className = "exercise-card bg-white p-4 rounded-lg shadow-md mb-3 cursor-pointer";
+          card.innerHTML = `
+            <div class="flex justify-between items-start">
+              <div>
+                <h3 class="font-bold text-lg text-pink-700">${ex.name} ${ex.emoji}</h3>
+                <p class="text-pink-600">${ex.sets} • Dificuldade: ${ex.difficulty}</p>
+              </div>
+              <button onclick="addToWorkout(event, '${category}', '${ex.name}')" class="bg-pink-100 text-pink-600 px-2 py-1 rounded-full text-sm hover:bg-pink-200">
+                ➕
+              </button>
+            </div>
+            <p class="text-sm text-pink-500 mt-2">${ex.desc}</p>
+          `;
+          card.onclick = () => showExerciseDetail(ex);
+          document.getElementById("exerciseList").appendChild(card);
+        });
+        
+        document.getElementById("exerciseCategories").classList.add("hidden");
+        document.getElementById("exerciseList").classList.remove("hidden");
+        document.getElementById("backToCategories").classList.remove("hidden");
+      }
+
+      function showExerciseDetail(exercise) {
+        document.getElementById("exerciseDetail").innerHTML = `
+          <div class="bg-white p-6 rounded-xl shadow-lg">
+            <h3 class="text-2xl font-bold text-pink-700 mb-2">${exercise.name} ${exercise.emoji}</h3>
+            <div class="flex gap-2 mb-3">
+              <span class="bg-pink-100 text-pink-800 px-2 py-1 rounded-full text-sm">${exercise.sets}</span>
+              <span class="bg-pink-100 text-pink-800 px-2 py-1 rounded-full text-sm">${exercise.difficulty}</span>
+            </div>
+            <p class="text-pink-600 mb-4">${exercise.desc}</p>
+            <button onclick="addToWorkout(null, '', '${exercise.name}')" class="w-full bg-pink-500 text-white py-2 rounded-lg hover:bg-pink-600">
+              Adicionar ao Meu Treino
+            </button>
+          </div>
+        `;
+        document.getElementById("exerciseList").classList.add("hidden");
+        document.getElementById("exerciseDetail").classList.remove("hidden");
+        document.getElementById("backToExercises").classList.remove("hidden");
+      }
+
+      function addToWorkout(event, category, exerciseName) {
+        if (event) event.stopPropagation();
+        const exercise = workoutCoach.findExerciseByName(exerciseName);
+        if (!exercise) return;
+        
+        const workoutList = document.getElementById("workoutList");
+        const item = document.createElement("div");
+        item.className = "flex justify-between items-center bg-pink-50 p-3 rounded-lg mb-2";
+        item.innerHTML = `
+          <div>
+            <span class="font-medium text-pink-700">${exercise.name} ${exercise.emoji}</span>
+            <span class="text-sm text-pink-500 ml-2">${exercise.sets}</span>
+          </div>
+          <button onclick="removeFromWorkout(this)" class="text-pink-400 hover:text-pink-600">✕</button>
+        `;
+        workoutList.appendChild(item);
+        saveToLocalStorage();
+      }
+
+      function removeFromWorkout(button) {
+        button.parentElement.remove();
+        saveToLocalStorage();
+      }
+
+      function generateAIWorkout() {
+        const goal = document.getElementById("workoutGoal").value;
+        const intensity = document.getElementById("workoutIntensity").value;
+        const workout = workoutCoach.generateWorkout(goal, intensity);
+        
+        document.getElementById("workoutList").innerHTML = '';
+        workout.forEach(ex => {
+          const item = document.createElement("div");
+          item.className = "flex justify-between items-center bg-pink-50 p-3 rounded-lg mb-2";
+          item.innerHTML = `
+            <div>
+              <span class="font-medium text-pink-700">${ex.name} ${ex.emoji}</span>
+              <span class="text-sm text-pink-500 ml-2">${ex.sets}</span>
+            </div>
+            <button onclick="removeFromWorkout(this)" class="text-pink-400 hover:text-pink-600">✕</button>
+          `;
+          document.getElementById("workoutList").appendChild(item);
+        });
+        
+        const aiMessage = document.getElementById("aiMessage");
+        aiMessage.innerHTML = `
+          <div class="ai-message bg-pink-100 border-l-4 border-pink-500 p-4 rounded-r-lg mb-4">
+            <p class="text-pink-700 font-medium">💡 ${workoutCoach.generateMotivationalMessage()}</p>
+            <p class="text-sm text-pink-600 mt-1">Treino ${intensity} gerado com foco em ${goal}</p>
+          </div>
+        `;
+        saveToLocalStorage();
+      }
+
+      function clearWorkout() {
+        if (confirm("Limpar seu treino atual?")) {
+          document.getElementById("workoutList").innerHTML = '';
+          document.getElementById("aiMessage").innerHTML = '';
+          saveToLocalStorage();
+        }
+      }
+
+      function backToCategories() {
+        document.getElementById("exerciseCategories").classList.remove("hidden");
+        document.getElementById("exerciseList").classList.add("hidden");
+        document.getElementById("exerciseDetail").classList.add("hidden");
+        document.getElementById("backToCategories").classList.add("hidden");
+        document.getElementById("backToExercises").classList.add("hidden");
+      }
+
+      function backToExercises() {
+        document.getElementById("exerciseList").classList.remove("hidden");
+        document.getElementById("exerciseDetail").classList.add("hidden");
+        document.getElementById("backToExercises").classList.add("hidden");
+      }
+
+      function getEmojiForCategory(category) {
+        const emojis = {
+          "perna": "🦵", "braço": "💪", "abdômen": "🩲", 
+          "cardio": "🏃‍♀️", "alongamento": "🧘‍♀️"
+        };
+        return emojis[category] || "🏋️‍♀️";
+      }
+
+      function capitalizeFirstLetter(string) {
+        return string.charAt(0).toUpperCase() + string.slice(1);
+      }
+
+      // ========== FUNÇÕES GERAIS ==========
+      function showTab(tabName) {
+        // Esconder todas as abas
+        document.querySelectorAll('.tab-content').forEach(tab => {
+          tab.classList.add('hidden');
+        });
+        
+        // Remover classe 'active' de todos os botões
+        document.querySelectorAll('.tab-button').forEach(btn => {
+          btn.classList.remove('active');
+        });
+        
+        // Mostrar aba selecionada e marcar botão como ativo
+        document.getElementById(`${tabName}Tab`).classList.remove('hidden');
+        document.querySelector(`.tab-button[onclick="showTab('${tabName}')"]`).classList.add('active');
+        
+        // Atualizar exibições específicas
+        if (tabName === 'treino') {
+          showExerciseCategories();
+        } else if (tabName === 'diario') {
+          updateNutritionTotals();
+        }
+      }
+
+      function saveToLocalStorage() {
+        // Salvar água
+        localStorage.setItem("waterTotal", waterTotal);
+        
+        // Salvar diário alimentar
+        const foodItems = [];
+        document.querySelectorAll('.food-item').forEach(item => {
+          foodItems.push({
+            name: item.querySelector('span.font-bold').textContent,
+            quantity: parseFloat(item.querySelector('span.text-pink-500').textContent.split('•')[0].replace('g', '').trim()),
+            time: item.querySelector('span.text-pink-500').textContent.split('•')[1].trim(),
+            mealTime: item.querySelector('span.text-pink-500').textContent.split('•')[2].trim(),
+            calories: parseInt(item.querySelector('.nutrition-badge').textContent.split(' ')[0]),
+            protein: parseFloat(item.querySelectorAll('.nutrition-badge')[1].textContent.split(' ')[1].replace('g', '')),
+            carbs: parseFloat(item.querySelectorAll('.nutrition-badge')[2].textContent.split(' ')[1].replace('g', '')),
+            fat: parseFloat(item.querySelectorAll('.nutrition-badge')[3].textContent.split(' ')[1].replace('g', '')),
+            category: item.querySelectorAll('.nutrition-badge')[4].textContent,
+            date: currentDate
+          });
+        });
+        localStorage.setItem("foodDiary", JSON.stringify(foodItems));
+        
+        // Salvar treino
+        const workoutItems = [];
+        document.querySelectorAll('#workoutList > div').forEach(item => {
+          workoutItems.push({
+            name: item.querySelector('span.font-medium').textContent.replace(/[\u{1F600}-\u{1F6FF}]/gu, '').trim(),
+            sets: item.querySelector('span.text-sm').textContent.trim()
+          });
+        });
+        localStorage.setItem("workoutPlan", JSON.stringify(workoutItems));
+      }
+
+      function loadFromLocalStorage() {
+        // Carregar água
+        const savedWater = localStorage.getItem("waterTotal");
+        if (savedWater) {
+          waterTotal = parseInt(savedWater);
+          updateWaterDisplay();
+        }
+        
+        // Carregar diário alimentar
+        const savedDiary = localStorage.getItem("foodDiary");
+        if (savedDiary) {
+          const foodItems = JSON.parse(savedDiary);
+          foodItems.forEach(food => {
+            if (food.date === currentDate) {
+              addFoodToDiary(food);
+            }
+          });
+          updateNutritionTotals();
+        }
+        
+        // Carregar treino
+        const savedWorkout = localStorage.getItem("workoutPlan");
+        if (savedWorkout) {
+          const workoutItems = JSON.parse(savedWorkout);
+          workoutItems.forEach(ex => {
+            const exercise = workoutCoach.findExerciseByName(ex.name);
+            if (exercise) {
+              const workoutList = document.getElementById("workoutList");
+              const item = document.createElement("div");
+              item.className = "flex justify-between items-center bg-pink-50 p-3 rounded-lg mb-2";
+              item.innerHTML = `
+                <div>
+                  <span class="font-medium text-pink-700">${exercise.name} ${exercise.emoji}</span>
+                  <span class="text-sm text-pink-500 ml-2">${exercise.sets}</span>
+                </div>
+                <button onclick="removeFromWorkout(this)" class="text-pink-400 hover:text-pink-600">✕</button>
+              `;
+              workoutList.appendChild(item);
+            }
+          });
+        }
+      }
+
+      function checkTime() {
+        const now = new Date();
+        const hora = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        
+        if (hora === "20:00" && waterTotal < dailyGoal) {
+          alert("Lembrete: já tomou sua água agora à noite, amor? 💧🥰");
+        }
+        
+        const hours = now.getHours();
+        if (hours === 12 || hours === 19) {
+          const meal = hours === 12 ? "almoço" : "jantar";
+          if (!document.querySelector(`.food-item span.text-pink-500:contains(${meal})`)) {
+            alert(`Hora do ${meal}! Que tal registrar o que vai comer? 🍽️`);
+          }
+        }
+      }
+
+      function playMusic() {
+        const audio = document.getElementById("bgm");
+        audio.volume = 0.3;
+        audio.play().catch(() => {});
+      }
+
+      window.onload = function () {
+        loadFromLocalStorage();
+        showMessage();
+        playMusic();
+        showTab('agua');
+        setInterval(checkTime, 60000);
+      }
+    </script>
+  </head>
+  <body class="bg-pink-100 min-h-screen flex flex-col items-center p-4">
+    <audio id="bgm" loop>
+      <source src="https://cdn.pixabay.com/audio/2022/10/26/audio_a29cfdc109.mp3" type="audio/mpeg">
+    </audio>
+
+    <h1 class="text-4xl font-bold text-pink-700 mb-2">Oi, Yasmin 💕</h1>
+    <p class="text-xl text-pink-600 mb-4 text-center">Seu app pessoal de saúde e bem-estar 💖</p>
+
+    <div class="flex gap-2 mb-4 flex-wrap justify-center">
+      <button onclick="showTab('agua')" class="tab-button active bg-pink-500 text-white px-4 py-2 rounded-full">Hidratação 💧</button>
+      <button onclick="showTab('treino')" class="tab-button bg-pink-200 text-pink-800 px-4 py-2 rounded-full">Treinos 🏋️‍♀️</button>
+      <button onclick="showTab('nutricao')" class="tab-button bg-pink-200 text-pink-800 px-4 py-2 rounded-full">Nutrição 🥗</button>
+      <button onclick="showTab('diario')" class="tab-button bg-pink-200 text-pink-800 px-4 py-2 rounded-full">Diário 📝</button>
+    </div>
+
+    <!-- Aba Hidratação -->
+    <div id="aguaTab" class="tab-content w-full max-w-sm bg-white p-6 rounded-2xl shadow-lg">
+      <div class="flex justify-between items-center mb-1">
+        <span class="text-sm text-pink-600">Progresso:</span>
+        <span id="waterPercentage" class="text-sm font-bold text-pink-700">0%</span>
+      </div>
+      <div class="w-full bg-pink-200 rounded-full h-4 mb-4">
+        <div id="progressBar" class="bg-pink-500 h-4 rounded-full" style="width: 0%"></div>
+      </div>
+      <p id="waterAmount" class="text-center text-lg font-semibold text-pink-700 mb-4">0ml / 3000ml</p>
+
+      <button onclick="addWater()" class="w-full bg-pink-500 text-white py-2 rounded-xl text-lg hover:bg-pink-600 transition">
+        +250ml 💧
+      </button>
+
+      <p id="message" class="text-center mt-4 text-pink-600 italic"></p>
+
+      <button onclick="resetWater()" class="mt-4 w-full bg-pink-200 text-pink-700 py-1 rounded-xl text-sm hover:bg-pink-300 transition">
+        Reiniciar progresso 🔁
+      </button>
+    </div>
+
+    <!-- Aba Treinos -->
+    <div id="treinoTab" class="tab-content hidden w-full max-w-md bg-white p-6 rounded-2xl shadow-lg">
+      <h2 class="text-2xl font-bold text-pink-700 mb-4 text-center">Sua IA de Treinos 💖</h2>
+      
+      <div class="bg-pink-50 p-4 rounded-lg mb-4">
+        <h3 class="text-lg font-semibold text-pink-700 mb-2">Gerar Treino Automático</h3>
+        
+        <div class="mb-3">
+          <label class="block text-pink-700 mb-1">Objetivo:</label>
+          <select id="workoutGoal" class="w-full p-2 border border-pink-300 rounded-lg">
+            <option value="Força">Força</option>
+            <option value="Resistência">Resistência</option>
+            <option value="Definição">Definição</option>
+            <option value="Relaxamento">Relaxamento</option>
+          </select>
+        </div>
+        
+        <div class="mb-4">
+          <label class="block text-pink-700 mb-1">Intensidade:</label>
+          <select id="workoutIntensity" class="w-full p-2 border border-pink-300 rounded-lg">
+            <option value="leve">Leve</option>
+            <option value="moderado" selected>Moderado</option>
+            <option value="intenso">Intenso</option>
+          </select>
+        </div>
+        
+        <button onclick="generateAIWorkout()" class="w-full bg-pink-600 text-white py-2 rounded-lg hover:bg-pink-700 mb-2">
+          🧠 Gerar Treino com IA
+        </button>
+        
+        <button onclick="clearWorkout()" class="w-full bg-pink-200 text-pink-800 py-2 rounded-lg hover:bg-pink-300">
+          Limpar Treino
+        </button>
+        
+        <div id="aiMessage" class="mt-3"></div>
+      </div>
+      
+      <div class="bg-pink-50 p-4 rounded-lg mb-4">
+        <h3 class="text-lg font-semibold text-pink-700 mb-2">Seu Treino de Hoje</h3>
+        <div id="workoutList" class="mb-3">
+          <!-- Exercícios serão adicionados aqui -->
+        </div>
+        <button onclick="saveWorkout()" class="w-full bg-pink-500 text-white py-2 rounded-lg hover:bg-pink-600">
+          Salvar Treino
+        </button>
+      </div>
+      
+      <div class="bg-pink-50 p-4 rounded-lg">
+        <h3 class="text-lg font-semibold text-pink-700 mb-2">Biblioteca de Exercícios</h3>
+        
+        <div id="exerciseCategories" class="flex flex-wrap gap-2 mb-3">
+          <!-- Categorias serão adicionadas aqui -->
+        </div>
+        
+        <div id="exerciseList" class="hidden">
+          <!-- Exercícios serão mostrados aqui -->
+        </div>
+        
+        <div id="exerciseDetail" class="hidden">
+          <!-- Detalhes do exercício serão mostrados aqui -->
+        </div>
+        
+        <div class="flex gap-2">
+          <button id="backToCategories" onclick="backToCategories()" class="hidden bg-pink-200 text-pink-800 px-4 py-2 rounded-lg hover:bg-pink-300">
+            ← Voltar para Categorias
+          </button>
+          <button id="backToExercises" onclick="backToExercises()" class="hidden bg-pink-200 text-pink-800 px-4 py-2 rounded-lg hover:bg-pink-300">
+            ← Voltar para Exercícios
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Aba Nutrição -->
+    <div id="nutricaoTab" class="tab-content hidden w-full max-w-sm bg-white p-6 rounded-2xl shadow-lg">
+      <h2 class="text-2xl font-bold text-pink-700 mb-4 text-center">Dicas Nutricionais 🥗</h2>
+      <div class="space-y-4">
+        <div class="bg-pink-50 p-4 rounded-lg">
+          <h3 class="font-bold text-pink-700 mb-2">Café da manhã ideal:</h3>
+          <p class="text-pink-600">Omelete com aveia + banana + chia + 1 colher de mel 🍌</p>
+        </div>
+        <div class="bg-pink-50 p-4 rounded-lg">
+          <h3 class="font-bold text-pink-700 mb-2">Almoço balanceado:</h3>
+          <p class="text-pink-600">Arroz integral + feijão + peito de frango + brócolis e cenoura 🥦</p>
+        </div>
+        <div class="bg-pink-50 p-4 rounded-lg">
+          <h3 class="font-bold text-pink-700 mb-2">Lanche saudável:</h3>
+          <p class="text-pink-600">Iogurte natural + mix de frutas vermelhas + granola caseira 🍓</p>
+        </div>
+        <div class="bg-pink-50 p-4 rounded-lg">
+          <h3 class="font-bold text-pink-700 mb-2">Jantar leve:</h3>
+          <p class="text-pink-600">Sopa de legumes com frango desfiado ou salada com atum 🥗</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Aba Diário Alimentar -->
+    <div id="diarioTab" class="tab-content hidden w-full max-w-md bg-white p-6 rounded-2xl shadow-lg">
+      <h2 class="text-2xl font-bold text-pink-700 mb-4 text-center">Diário Alimentar 📝</h2>
+      
+      <div class="bg-pink-50 p-4 rounded-lg mb-4">
+        <h3 class="text-lg font-semibold text-pink-700 mb-2">Adicionar Alimento</h3>
+        
+        <div class="mb-2">
+          <label class="block text-pink-700 mb-1">Refeição:</label>
+          <select id="mealTime" class="w-full p-2 border border-pink-300 rounded-lg">
+            <option value="Café da manhã">Café da manhã</option>
+            <option value="Lanche da manhã">Lanche da manhã</option>
+            <option value="Almoço">Almoço</option>
+            <option value="Lanche da tarde">Lanche da tarde</option>
+            <option value="Jantar">Jantar</option>
+            <option value="Ceia">Ceia</option>
+          </select>
+        </div>
+        
+        <div class="mb-2">
+          <label class="block text-pink-700 mb-1">Alimento:</label>
+          <input id="foodInput" type="text" placeholder="Ex: frango grelhado, arroz integral..." class="w-full p-2 border border-pink-300 rounded-lg">
+        </div>
+        
+        <div class="mb-3">
+          <label class="block text-pink-700 mb-1">Quantidade (gramas):</label>
+          <input id="quantityInput" type="number" placeholder="Ex: 100" class="w-full p-2 border border-pink-300 rounded-lg">
+        </div>
+        
+        <button onclick="addFood()" class="w-full bg-pink-500 text-white py-2 rounded-lg hover:bg-pink-600 transition">
+          Adicionar Alimento ➕
+        </button>
+      </div>
+      
+      <div class="bg-pink-50 p-4 rounded-lg mb-4">
+        <h3 class="text-lg font-semibold text-pink-700 mb-2">Resumo Nutricional</h3>
+        
+        <div class="grid grid-cols-4 gap-2 mb-3">
+          <div class="bg-white p-2 rounded text-center border border-pink-200">
+            <p class="text-sm text-pink-600">Calorias</p>
+            <p id="totalCalories" class="font-bold text-xl text-pink-800">0</p>
+            <p class="text-xs text-pink-500">kcal</p>
+          </div>
+          <div class="bg-white p-2 rounded text-center border border-pink-200">
+            <p class="text-sm text-pink-600">Proteínas</p>
+            <p id="totalProtein" class="font-bold text-xl text-pink-800">0</p>
+            <p class="text-xs text-pink-500">gramas</p>
+          </div>
+          <div class="bg-white p-2 rounded text-center border border-pink-200">
+            <p class="text-sm text-pink-600">Carboidratos</p>
+            <p id="totalCarbs" class="font-bold text-xl text-pink-800">0</p>
+            <p class="text-xs text-pink-500">gramas</p>
+          </div>
+          <div class="bg-white p-2 rounded text-center border border-pink-200">
+            <p class="text-sm text-pink-600">Gorduras</p>
+            <p id="totalFat" class="font-bold text-xl text-pink-800">0</p>
+            <p class="text-xs text-pink-500">gramas</p>
+          </div>
+        </div>
+        
+        <div class="bg-white p-3 rounded border border-pink-200">
+          <h4 class="text-sm font-semibold text-pink-700 mb-2">Distribuição de Macronutrientes</h4>
+          <div class="flex h-4 mb-1">
+            <div id="proteinBar" class="bg-blue-500 rounded-l-full" style="width: 30%"></div>
+            <div id="carbsBar" class="bg-green-500" style="width: 50%"></div>
+            <div id="fatBar" class="bg-yellow-500 rounded-r-full" style="width: 20%"></div>
+          </div>
+          <div class="flex justify-between text-xs">
+            <span id="proteinPercent" class="text-blue-700">30%</span>
+            <span id="carbsPercent" class="text-green-700">50%</span>
+            <span id="fatPercent" class="text-yellow-700">20%</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="bg-pink-50 p-4 rounded-lg">
+        <div class="flex justify-between items-center mb-2">
+          <h3 class="text-lg font-semibold text-pink-700">Seus Alimentos Hoje</h3>
+          <button onclick="clearDiary()" class="text-sm bg-pink-200 text-pink-700 px-2 py-1 rounded hover:bg-pink-300">Limpar Tudo</button>
+        </div>
+        
+        <div id="foodDiary" class="max-h-64 overflow-y-auto pr-2">
+          <!-- Itens de comida serão adicionados aqui dinamicamente -->
+        </div>
+      </div>
+    </div>
+
+    <footer class="mt-6 text-pink-500 text-sm text-center">
+      Feito com 💕 especialmente para você<br>
+      
+    </footer>
+  </body>
+</html>
